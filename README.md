@@ -133,7 +133,7 @@ I'm transitioning from 20+ years in IT infrastructure and automation into backen
 - **Portfolio:** Production automation tools and full-stack development projects
 
 **Connect:**
-- **LinkedIn:** [linkedin.com/in/nathanforest-b8a0a867](https://linkedin.com/in/nathanforest-b8a0a867)
+- **LinkedIn:** [linkedin.com/in/nathan-forest-australia](https://linkedin.com/in/nathan-forest-australia)
 - **GitHub:** [github.com/Nathan-Forest](https://github.com/Nathan-Forest)
 
 ## Contributing
