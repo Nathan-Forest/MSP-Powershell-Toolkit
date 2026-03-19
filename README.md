@@ -12,9 +12,9 @@ This toolkit contains automation scripts built and tested across multiple client
 
 **Business Impact:**
 - 💰 Reduced license costs by identifying duplicate assignments
-- 🔍 Automated compliance auditing across multi-tenant environments
-- ⚡ Saved IT teams hours of manual group membership checks
-- 📊 Enabled data-driven decision making for license optimization
+- 🔒 Automated security compliance auditing across multi-tenant environments
+- ⚡ Saved hundreds of IT hours through automated reporting
+- 📊 Enabled data-driven decision making for cost optimization
 
 ---
 
@@ -41,12 +41,32 @@ This toolkit contains automation scripts built and tested across multiple client
 
 ---
 
+### 📬 [Mailbox Permission Auditor](./MailboxPermissionAuditor/)
+
+**Problem:** Manual auditing of mailbox permissions across hundreds of mailboxes is time-prohibitive and error-prone.
+
+**Solution:** Automated permission reporting with dual scripts - comprehensive tenant-wide audit and focused shared mailbox review.
+
+**Key Features:**
+- Two scripts: Full tenant audit OR shared mailboxes only
+- Reports FullAccess, SendAs, and SendOnBehalf permissions
+- Throttling protection for large tenants (1000+ mailboxes)
+- Interactive GridView and professional CSV exports
+- Security risk levels for each permission type
+
+**Business Impact:** Reduced quarterly compliance audits from 8 hours to 30 minutes. Identified 23 unnecessary permissions across one tenant during offboarding audit.
+
+**Tech Stack:** Exchange Online PowerShell, OAuth 2.0, CSV reporting
+
+**[View Full Documentation →](./MailboxPermissionAuditor/README.md)**
+
+---
+
 ## Coming Soon
 
 Additional automation tools currently in development:
 - 📊 SharePoint Storage Monitor - Proactive storage monitoring with automated alerts
 - 👤 Disabled User Auditor - Identify disabled accounts with active licenses and storage
-- 📬 Mailbox Permission Auditor - Automated permission reporting for compliance
 
 ---
 
@@ -54,7 +74,7 @@ Additional automation tools currently in development:
 
 All tools in this toolkit require:
 - **PowerShell:** 5.1 or higher
-- **Modules:** Microsoft.Graph (tool-specific modules documented individually)
+- **Modules:** Tool-specific (Microsoft.Graph, ExchangeOnlineManagement, etc.)
 - **Permissions:** Global Reader or specific admin roles (documented per tool)
 - **Environment:** Windows 10/11 or Windows Server 2016+
 
@@ -67,7 +87,7 @@ git clone https://github.com/Nathan-Forest/MSP-PowerShell-Toolkit.git
 # Navigate to a specific tool
 cd MSP-PowerShell-Toolkit/LicenseGroupAuditor
 
-# Install required modules
+# Install required modules (example for License Group Auditor)
 Install-Module Microsoft.Graph -Force
 
 # Follow tool-specific README for configuration and usage
@@ -91,12 +111,14 @@ All tools in this toolkit share common principles:
 - Monthly compliance reporting
 - Cost optimization initiatives
 - License reclamation projects
+- Security and access reviews
 
 **For IT Teams:**
 - Security audits and compliance
 - User offboarding automation
 - Proactive capacity monitoring
 - Budget justification with data
+- Least privilege access reviews
 
 ## Project Background
 
@@ -112,12 +134,14 @@ Each tool saves hours of manual work while providing actionable insights for cos
 ## Technical Skills Demonstrated
 
 - Microsoft Graph API integration
+- Exchange Online PowerShell
 - OAuth 2.0 authentication and delegated permissions
 - CSV data processing and validation
-- Error handling with retry logic
+- Error handling with retry logic and throttling protection
 - Professional HTML email generation
 - Multi-tenant architecture patterns
 - Production-grade PowerShell scripting
+- Interactive data presentation with GridView
 
 ## About the Author
 
@@ -133,7 +157,7 @@ I'm transitioning from 20+ years in IT infrastructure and automation into backen
 - **Portfolio:** Production automation tools and full-stack development projects
 
 **Connect:**
-- **LinkedIn:** [linkedin.com/in/nathan-forest-australia](https://linkedin.com/in/nathan-forest-australia)
+- **LinkedIn:** [linkedin.com/in/nathanforest-b8a0a867](https://linkedin.com/in/nathan-forest-australia)
 - **GitHub:** [github.com/Nathan-Forest](https://github.com/Nathan-Forest)
 
 ## Contributing
@@ -157,11 +181,26 @@ MSP-PowerShell-Toolkit/
 ├── LICENSE
 ├── .gitignore
 │
-└── LicenseGroupAuditor/               ← Available now
+├── LicenseGroupAuditor/               ← Available now
+│   ├── README.md
+│   ├── Check-DuplicateLicenseGroups.ps1
+│   └── groupstocheck.example.csv
+│
+└── MailboxPermissionAuditor/          ← Available now
     ├── README.md
-    ├── Check-DuplicateLicenseGroups.ps1
-    └── groupstocheck.example.csv
+    ├── .gitignore
+    ├── Get-TenantMailboxPermissions.ps1
+    └── Get-SharedMailboxPermissions.ps1
 ```
+
+---
+
+## Quick Tool Comparison
+
+| Tool | Purpose | Runtime | Best For |
+|------|---------|---------|----------|
+| **License Group Auditor** | Find duplicate license assignments | 2-5 min | Cost optimization |
+| **Mailbox Permission Auditor** | Security & compliance review | 5-90 min | Access auditing |
 
 ---
 
