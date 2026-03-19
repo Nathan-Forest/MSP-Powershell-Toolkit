@@ -62,6 +62,27 @@ This toolkit contains automation scripts built and tested across multiple client
 
 ---
 
+### 🔎 [User Mailbox Access Finder](./UserMailboxAccessFinder/)
+
+**Problem:** During offboarding or security audits, you need to know exactly which mailboxes specific users can access.
+
+**Solution:** Reverse lookup tool that takes a CSV list of users and identifies all mailboxes they have access to across the tenant.
+
+**Key Features:**
+- CSV-driven user list (perfect for offboarding workflows)
+- Fast targeted scanning (only reports specified users)
+- Three permission types: FullAccess, SendAs, SendOnBehalf
+- GridView and CSV export for easy analysis
+- Verification-friendly for post-removal confirmation
+
+**Business Impact:** Reduced offboarding mailbox audit from 2-4 hours to 15 minutes. Discovered 17 orphaned permissions during routine assistant review.
+
+**Tech Stack:** Exchange Online PowerShell, Reverse Lookup Pattern, CSV reporting
+
+**[View Full Documentation →](./UserMailboxAccessFinder/README.md
+
+---
+
 ## Coming Soon
 
 Additional automation tools currently in development:
