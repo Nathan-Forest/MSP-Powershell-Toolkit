@@ -51,8 +51,7 @@ function Get-FriendlyLicenseName {
         # Microsoft 365 Plans
         "SPE_E3" = "Microsoft 365 E3"
         "SPE_E5" = "Microsoft 365 E5"
-        "SPE_F1" = "Microsoft 365 F1"
-        "SPE_F3" = "Microsoft 365 F3"
+        "SPE_F1" = "Microsoft 365 F3"
         "Microsoft_365_E3" = "Microsoft 365 E3"
         "Microsoft_365_E5" = "Microsoft 365 E5"
         
@@ -65,6 +64,9 @@ function Get-FriendlyLicenseName {
         "ENTERPRISEPREMIUM_NOPSTNCONF" = "Office 365 E5 (without Audio Conferencing)"
         "DESKLESSPACK" = "Office 365 F3"
         "OFFICESUBSCRIPTION" = "Microsoft 365 Apps for Enterprise"
+
+        #Copoilot
+        "Microsoft_365_Copilot" = "Copilot for Microsoft 365"
         
         # Business Plans
         "O365_BUSINESS_ESSENTIALS" = "Microsoft 365 Business Basic"
@@ -90,6 +92,9 @@ function Get-FriendlyLicenseName {
         "TEAMS1" = "Microsoft Teams"
         "MCOMEETADV" = "Audio Conferencing"
         "PHONESYSTEM_VIRTUALUSER" = "Phone System - Virtual User"
+        "MCOEV" = "Microsoft Teams Phone Standard"
+        "Microsoft_Teams_Rooms_Basic" = "Microsoft Teams Rooms Basic"
+        "TEAMS_PHONE_STANDARD_FLW_NEW" = "Microsoft Teams Phone Standard for Frontline Workers"
         
         # Project & Visio
         "PROJECTPREMIUM" = "Project Plan 5"
@@ -106,7 +111,8 @@ function Get-FriendlyLicenseName {
         "THREAT_INTELLIGENCE" = "Microsoft Defender for Office 365 Plan 2"
         "INFORMATION_PROTECTION_COMPLIANCE" = "Microsoft 365 E5 Compliance"
         "M365_SECURITY_COMPLIANCE_FOR_FLW" = "Microsoft 365 F5 Security + Compliance Add-on"
-        
+        "SPE_F5_SECCOMP" = "Microsoft 365 F5 Security + Compliance Add-on"
+
         # Power Platform
         "POWER_BI_PRO" = "Power BI Pro"
         "POWER_BI_STANDARD" = "Power BI (free)"
@@ -120,6 +126,7 @@ function Get-FriendlyLicenseName {
         # Defender
         "MDATP_Server" = "Microsoft Defender for Endpoint Server"
         "WIN_DEF_ATP" = "Microsoft Defender for Endpoint"
+        "MDATP_XPLAT" = "Microsoft Defender for Endpoint"
         
         # Intune
         "INTUNE_A" = "Microsoft Intune"
@@ -203,12 +210,21 @@ function Get-LicenseAssignmentSource {
     )
     
     try {
-        # Get user's license details with assignment states
-        $userLicenses = Get-MgUserLicenseDetail -UserId $UserId -ErrorAction Stop
+        # Get user's license assignment states
+        $user = Get-MgUser -UserId $UserId -Property "Id,LicenseAssignmentStates" -ErrorAction Stop
         
-        $targetLicense = $userLicenses | Where-Object { $_.SkuId -eq $SkuId }
+        if (-not $user.LicenseAssignmentStates) {
+            return @{
+                AssignmentType = "Unknown"
+                GroupName = ""
+                GroupId = ""
+            }
+        }
         
-        if (-not $targetLicense) {
+        # Get all assignment states for this specific SKU
+        $assignmentStates = $user.LicenseAssignmentStates | Where-Object { $_.SkuId -eq $SkuId }
+        
+        if (-not $assignmentStates) {
             return @{
                 AssignmentType = "Not Assigned"
                 GroupName = ""
@@ -216,53 +232,81 @@ function Get-LicenseAssignmentSource {
             }
         }
         
-        # Check AssignedPlans for assignment source
-        # If DisabledPlans is empty and license exists, it's likely group-based
-        # We need to check the user's group memberships that assign this SKU
+        # Separate direct and group assignments
+        $directAssignments = $assignmentStates | Where-Object { -not $_.AssignedByGroup }
+        $groupAssignments = $assignmentStates | Where-Object { $_.AssignedByGroup }
         
-        # Get groups that assign licenses to this user
-        $user = Get-MgUser -UserId $UserId -Property "Id,LicenseAssignmentStates" -ErrorAction Stop
-        
-        if ($user.LicenseAssignmentStates) {
-            $assignmentState = $user.LicenseAssignmentStates | Where-Object { $_.SkuId -eq $SkuId }
+        # If ONLY group assignments
+        if ($groupAssignments -and -not $directAssignments) {
+            # Get all group names (filter out nulls/empties)
+            $groupNames = @()
+            $groupIds = @()
             
-            if ($assignmentState) {
-                if ($assignmentState.AssignedByGroup) {
-                    # Group-based assignment
+            foreach ($assignment in $groupAssignments) {
+                if (-not [string]::IsNullOrEmpty($assignment.AssignedByGroup)) {
                     try {
-                        $group = Get-MgGroup -GroupId $assignmentState.AssignedByGroup -ErrorAction Stop
-                        return @{
-                            AssignmentType = "Group"
-                            GroupName = $group.DisplayName
-                            GroupId = $assignmentState.AssignedByGroup
-                        }
+                        $group = Get-MgGroup -GroupId $assignment.AssignedByGroup -ErrorAction Stop
+                        $groupNames += $group.DisplayName
+                        $groupIds += $assignment.AssignedByGroup
                     } catch {
-                        return @{
-                            AssignmentType = "Group"
-                            GroupName = "[Unable to retrieve group name]"
-                            GroupId = $assignmentState.AssignedByGroup
-                        }
-                    }
-                } else {
-                    # Direct assignment
-                    return @{
-                        AssignmentType = "Direct"
-                        GroupName = ""
-                        GroupId = ""
+                        # Group might be deleted or inaccessible
+                        $groupNames += "[Deleted or inaccessible group]"
+                        $groupIds += $assignment.AssignedByGroup
                     }
                 }
             }
+            
+            return @{
+                AssignmentType = "Group"
+                GroupName = ($groupNames -join "; ")
+                GroupId = ($groupIds -join "; ")
+            }
         }
         
-        # Fallback - if we can't determine, assume direct
+        # If ONLY direct assignments
+        if ($directAssignments -and -not $groupAssignments) {
+            return @{
+                AssignmentType = "Direct"
+                GroupName = ""
+                GroupId = ""
+            }
+        }
+        
+        # If BOTH direct and group assignments (duplicate license scenario)
+        if ($directAssignments -and $groupAssignments) {
+            # This is actually a duplicate - same license from both sources
+            $groupNames = @()
+            $groupIds = @()
+            
+            foreach ($assignment in $groupAssignments) {
+                if (-not [string]::IsNullOrEmpty($assignment.AssignedByGroup)) {
+                    try {
+                        $group = Get-MgGroup -GroupId $assignment.AssignedByGroup -ErrorAction Stop
+                        $groupNames += $group.DisplayName
+                        $groupIds += $assignment.AssignedByGroup
+                    } catch {
+                        $groupNames += "[Deleted or inaccessible group]"
+                        $groupIds += $assignment.AssignedByGroup
+                    }
+                }
+            }
+            
+            return @{
+                AssignmentType = "Both (Direct + Group)"
+                GroupName = ($groupNames -join "; ")
+                GroupId = ($groupIds -join "; ")
+            }
+        }
+        
+        # Fallback
         return @{
-            AssignmentType = "Direct (Assumed)"
+            AssignmentType = "Unknown"
             GroupName = ""
             GroupId = ""
         }
         
     } catch {
-        Write-Warning "Error checking license assignment for user $UserId`: $($_.Exception.Message)"
+        Write-Warning "Error checking license assignment for user ${UserId}: $($_.Exception.Message)"
         return @{
             AssignmentType = "Error"
             GroupName = ""
