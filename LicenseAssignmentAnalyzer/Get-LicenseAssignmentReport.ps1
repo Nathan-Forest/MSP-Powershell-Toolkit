@@ -95,6 +95,7 @@ function Get-FriendlyLicenseName {
         "MCOEV" = "Microsoft Teams Phone Standard"
         "Microsoft_Teams_Rooms_Basic" = "Microsoft Teams Rooms Basic"
         "TEAMS_PHONE_STANDARD_FLW_NEW" = "Microsoft Teams Phone Standard for Frontline Workers"
+        "MCOCAP" = "Microsoft Teams Shared Devices"
         
         # Project & Visio
         "PROJECTPREMIUM" = "Project Plan 5"
